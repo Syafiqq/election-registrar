@@ -22,5 +22,5 @@ android {
 
 
 dependencies {
-    compile group: 'androidx.annotation', name: 'annotation', version: '1.1.0-beta01'
+    implementation group: 'androidx.annotation', name: 'annotation', version: '1.1.0-beta01'
 }
