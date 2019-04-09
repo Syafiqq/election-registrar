@@ -37,9 +37,10 @@
             android:textSize="12sp"/>
 
     <TextView
-            android:text="@string/app_name"
+            android:text="@string/app_name_spaced"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:id="@+id/title"
             app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintEnd_toEndOf="@+id/progress"
