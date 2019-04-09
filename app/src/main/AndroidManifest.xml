@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools" package="com.github.syafiqq.electionregistrar">
 
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
             android:name=".Application"
             android:allowBackup="true"
