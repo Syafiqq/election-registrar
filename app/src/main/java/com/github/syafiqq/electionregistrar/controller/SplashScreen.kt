@@ -1,17 +1,27 @@
 package com.github.syafiqq.electionregistrar.controller
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.github.syafiqq.electionregistrar.R
 import kotlinx.android.synthetic.main.activity_splash_screen.*
+import timber.log.Timber
+import java.util.concurrent.CountDownLatch
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 class SplashScreen : AppCompatActivity() {
+    private var latch: CountDownLatch? = null
+    private val OPEN_CAMERA_PERMISSION: Int = 1
+
     private val mHideHandler = Handler()
     private val mHidePart2Runnable = Runnable {
         // Delayed removal of status and navigation bar
@@ -27,43 +37,20 @@ class SplashScreen : AppCompatActivity() {
                     View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                     View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
     }
-    private val mShowPart2Runnable = Runnable {
-        // Delayed display of UI elements
-        supportActionBar?.show()
-        fullscreen_content_controls.visibility = View.VISIBLE
-    }
     private var mVisible: Boolean = false
     private val mHideRunnable = Runnable { hide() }
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private val mDelayHideTouchListener = View.OnTouchListener { _, _ ->
-        if (AUTO_HIDE) {
-            delayedHide(AUTO_HIDE_DELAY_MILLIS)
-        }
-        false
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Timber.d("onCreate [saveInstanceState]")
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_splash_screen)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         mVisible = true
-
-        // Set up the user interaction to manually show or hide the system UI.
-        fullscreen_content.setOnClickListener { toggle() }
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        dummy_button.setOnTouchListener(mDelayHideTouchListener)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
+        Timber.d("onCreate [saveInstanceState]")
         super.onPostCreate(savedInstanceState)
 
         // Trigger the initial hide() shortly after the activity has been
@@ -72,35 +59,82 @@ class SplashScreen : AppCompatActivity() {
         delayedHide(100)
     }
 
-    private fun toggle() {
-        if (mVisible) {
-            hide()
-        } else {
-            show()
-        }
-    }
-
     private fun hide() {
+        Timber.d("hide []")
         // Hide UI first
         supportActionBar?.hide()
-        fullscreen_content_controls.visibility = View.GONE
         mVisible = false
 
         // Schedule a runnable to remove the status and navigation bar after a delay
-        mHideHandler.removeCallbacks(mShowPart2Runnable)
         mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY.toLong())
     }
 
-    private fun show() {
-        // Show the system bar
-        fullscreen_content.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        mVisible = true
+    override fun onStart() {
+        Timber.d("onStart []")
+        super.onStart()
+        checkAppPermission()
+    }
 
-        // Schedule a runnable to display UI elements after a delay
-        mHideHandler.removeCallbacks(mHidePart2Runnable)
-        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY.toLong())
+    override fun onRestart() {
+        Timber.d("onRestart []")
+        super.onRestart()
+        checkAppPermission()
+    }
+
+    private fun checkAppPermission() {
+        Timber.d("checkAppPermission []")
+        latch = CountDownLatch(2)
+        PermissionAsyncTask {
+            Timber.d("Start App")
+        }.execute(latch)
+        askCameraPermission()
+        dummyWaiting()
+    }
+
+    private fun dummyWaiting() {
+        Timber.d("dummyWaiting []")
+        Handler().postDelayed({ latch?.countDown() }, 500)
+    }
+
+
+    private fun askCameraPermission() {
+        Timber.d("askCameraPermission []")
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            )
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.CAMERA
+                )
+            ) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.CAMERA),
+                    OPEN_CAMERA_PERMISSION
+                )
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.CAMERA),
+                    OPEN_CAMERA_PERMISSION
+                )
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            this.latch?.countDown()
+        }
     }
 
     /**
@@ -108,8 +142,34 @@ class SplashScreen : AppCompatActivity() {
      * previously scheduled calls.
      */
     private fun delayedHide(delayMillis: Int) {
+        Timber.d("delayedHide [delayMillis:$delayMillis]")
+
         mHideHandler.removeCallbacks(mHideRunnable)
         mHideHandler.postDelayed(mHideRunnable, delayMillis.toLong())
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        Timber.d("onRequestPermissionsResult [requestCode:$requestCode, permissions, grantResults]")
+
+        when (requestCode) {
+            OPEN_CAMERA_PERMISSION -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    this.latch?.countDown()
+                } else {
+                }
+                return
+            }
+
+            // Add other 'when' lines to check for other
+            // permissions this app might request.
+            else -> {
+                // Ignore all other requests.
+            }
+        }
     }
 
     companion object {
@@ -130,5 +190,23 @@ class SplashScreen : AppCompatActivity() {
          * and a change of the status and navigation bar.
          */
         private val UI_ANIMATION_DELAY = 300
+    }
+}
+
+
+class PermissionAsyncTask(private var callback: (() -> Unit)?) : AsyncTask<CountDownLatch, Unit, Unit>() {
+    override fun doInBackground(vararg params: CountDownLatch?) {
+        Timber.d("doInBackground [params]")
+        val latch = params[0]!!
+        try {
+            latch.await()
+        } catch (e: Exception) {
+        }
+        Thread.sleep(500)
+    }
+
+    override fun onPostExecute(result: Unit?) {
+        Timber.d("onPostExecute [result]")
+        callback?.invoke()
     }
 }
