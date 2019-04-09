@@ -29,7 +29,7 @@ public interface IViewFinder {
     /**
      * Method that executes when Camera preview is starting.
      * It is recommended to update framing rect here and invalidate view after that. <br/>
-     * For example see: {@link ViewFinderView#setupViewFinder()}
+     * For example see: {@link IViewFinder#setupViewFinder()}
      */
     void setupViewFinder();
 

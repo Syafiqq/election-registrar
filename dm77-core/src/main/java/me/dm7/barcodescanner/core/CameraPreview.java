@@ -3,12 +3,14 @@ package me.dm7.barcodescanner.core;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
@@ -17,7 +19,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private CameraWrapper mCameraWrapper;
     private Handler mAutoFocusHandler;
     private boolean mPreviewing = true;
-    private boolean mAutoFocus = true;
+    Camera.AutoFocusCallback myAutoFocusCallback = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean arg0, Camera arg1) {
+            if (arg0) {
+                if (mCameraWrapper != null && mPreviewing && mSurfaceCreated) {
+                    cancelAutoFocus();
+                }
+            }
+        }
+    };
     private boolean mSurfaceCreated = false;
     private boolean mShouldScaleToFill = true;
     private Camera.PreviewCallback mPreviewCallback;
@@ -35,6 +46,64 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             scheduleAutoFocus();
         }
     };
+    private boolean mAutoFocus = false;
+
+    /**
+     * Called from PreviewSurfaceView to set touch focus.
+     *
+     * @param - Rect - new area for auto focus
+     */
+    public void doTouchFocus(final Rect tfocusRect) {
+        if (mCameraWrapper != null && mPreviewing && mSurfaceCreated) {
+            try {
+                List<Camera.Area> focusList = new ArrayList<>();
+                Camera.Area focusArea = new Camera.Area(tfocusRect, 1000);
+                focusList.add(focusArea);
+
+                Camera.Parameters param = mCameraWrapper.mCamera.getParameters();
+                param.setFocusAreas(focusList);
+                param.setMeteringAreas(focusList);
+                mCameraWrapper.mCamera.setParameters(param);
+
+                mCameraWrapper.mCamera.autoFocus(myAutoFocusCallback);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.i(TAG, "Unable to autofocus");
+            }
+        }
+    }
+
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mCameraWrapper != null && mPreviewing && mSurfaceCreated) {
+
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                float x = event.getX();
+                float y = event.getY();
+
+                Rect touchRect = new Rect(
+                        (int) (x - 100),
+                        (int) (y - 100),
+                        (int) (x + 100),
+                        (int) (y + 100));
+
+
+                final Rect targetFocusRect = new Rect(
+                        touchRect.left * 2000 / this.getWidth() - 1000,
+                        touchRect.top * 2000 / this.getHeight() - 1000,
+                        touchRect.right * 2000 / this.getWidth() - 1000,
+                        touchRect.bottom * 2000 / this.getHeight() - 1000);
+
+                doTouchFocus(targetFocusRect);
+            }
+        }
+        return this.performClick();
+    }
 
     public CameraPreview(Context context, CameraWrapper cameraWrapper, Camera.PreviewCallback previewCallback) {
         super(context);
@@ -118,6 +187,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             scheduleAutoFocus(); // wait 1 sec and then do check again
         }
     }
+
+    private void cancelAutoFocus() {
+        try {
+            mCameraWrapper.mCamera.cancelAutoFocus();
+        } catch (RuntimeException re) {
+            Log.e("CameraPreview", re.getMessage(), re);
+        }
+    }
+
 
     public void stopCameraPreview() {
         if (mCameraWrapper != null) {
