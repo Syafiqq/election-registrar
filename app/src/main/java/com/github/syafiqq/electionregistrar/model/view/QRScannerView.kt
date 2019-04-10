@@ -19,7 +19,7 @@ import java.util.*
 
 
 class QRScannerView : BarcodeScannerView {
-    private var mResultHandler: ResultHandler? = null
+    var mResultHandler: ResultHandler? = null
     private val hints: EnumMap<DecodeHintType, Any> = EnumMap(DecodeHintType::class.java)
 
     private val reader: QRCodeReader = QRCodeReader()
