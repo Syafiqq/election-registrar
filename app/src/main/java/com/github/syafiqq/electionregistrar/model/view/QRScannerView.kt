@@ -117,6 +117,11 @@ class QRScannerView : BarcodeScannerView {
         }
     }
 
+    fun resumeCameraPreview(resultHandler: ResultHandler) {
+        mResultHandler = resultHandler
+        super.resumeCameraPreview()
+    }
+
     private fun buildLuminanceSource(data: ByteArray, rect: Rect): PlanarYUVLuminanceSource? {
         var source: PlanarYUVLuminanceSource? = null
         try {
