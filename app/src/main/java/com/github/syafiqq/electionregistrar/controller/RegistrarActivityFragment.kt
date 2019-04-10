@@ -1,6 +1,7 @@
 package com.github.syafiqq.electionregistrar.controller
 
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +29,9 @@ class RegistrarActivityFragment : Fragment(), QRScannerView.ResultHandler {
         Timber.d("handleResult [image: ByteArray?, result: Result]")
 
         Toast.makeText(this.context!!, result.text, Toast.LENGTH_SHORT).show()
+
+        val handler = Handler()
+        handler.postDelayed({ mScannerView?.resumeCameraPreview(this@RegistrarActivityFragment) }, 2000)
     }
 
     override fun onResume() {
