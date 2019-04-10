@@ -3,6 +3,7 @@ package com.github.syafiqq.electionregistrar.model.view
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.hardware.Camera
 import android.os.Handler
 import android.os.Looper
@@ -59,7 +60,9 @@ class QRScannerView : BarcodeScannerView {
             }
 
             var rawResult: Result? = null
-            val source = buildLuminanceSource(data, width, height)
+            var rect = getFramingRectInPreview(width, height) ?: return
+            rect = getScaledFramingRect(rect)
+            val source = buildLuminanceSource(data, rect)
 
             if (source != null) {
                 var bitmap = BinaryBitmap(HybridBinarizer(source))
@@ -114,9 +117,7 @@ class QRScannerView : BarcodeScannerView {
         }
     }
 
-    private fun buildLuminanceSource(data: ByteArray, width: Int, height: Int): PlanarYUVLuminanceSource? {
-        var rect = getFramingRectInPreview(width, height) ?: return null
-        rect = getScaledFramingRect(rect)
+    private fun buildLuminanceSource(data: ByteArray, rect: Rect): PlanarYUVLuminanceSource? {
         var source: PlanarYUVLuminanceSource? = null
         try {
             source = PlanarYUVLuminanceSource(
