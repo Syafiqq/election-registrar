@@ -3,7 +3,6 @@ package com.github.syafiqq.electionregistrar.controller
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.syafiqq.electionregistrar.R
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_registrar.*
 
 class RegistrarActivity : AppCompatActivity() {
@@ -12,11 +11,6 @@ class RegistrarActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registrar)
         setSupportActionBar(toolbar)
-
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
     }
 
 }
