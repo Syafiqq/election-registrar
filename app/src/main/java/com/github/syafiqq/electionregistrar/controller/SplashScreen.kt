@@ -1,6 +1,7 @@
 package com.github.syafiqq.electionregistrar.controller
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Bundle
@@ -85,7 +86,10 @@ class SplashScreen : AppCompatActivity() {
         Timber.d("checkAppPermission []")
         latch = CountDownLatch(2)
         PermissionAsyncTask {
-            Timber.d("Start App")
+            Intent(this, RegistrarActivity::class.java).run {
+                startActivity(this)
+                finish()
+            }
         }.execute(latch)
         askCameraPermission()
         dummyWaiting()
