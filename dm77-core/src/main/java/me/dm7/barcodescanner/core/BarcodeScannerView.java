@@ -42,7 +42,7 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
     public void setupLayout(CameraWrapper cameraWrapper) {
         removeAllViews();
 
-        mPreview = new CameraPreview(getContext(), cameraWrapper, this);
+        mPreview = getCameraPreview(cameraWrapper);
         mPreview.setAspectTolerance(mAspectTolerance);
         mPreview.setShouldScaleToFill(mShouldScaleToFill);
         if (!mShouldScaleToFill) {
@@ -61,6 +61,10 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
             throw new IllegalArgumentException("IViewFinder object returned by " +
                     "'createViewFinderView()' should be instance of android.view.View");
         }
+    }
+
+    private CameraPreview getCameraPreview(CameraWrapper cameraWrapper) {
+        return new CameraPreview(getContext(), cameraWrapper, this);
     }
 
     /**
