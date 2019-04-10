@@ -87,7 +87,7 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
             if (mFlashState != null) {
                 setFlash(mFlashState);
             }
-            setMaxZoom();
+            setAutoFocus(mAutofocusState);
         }
     }
 
